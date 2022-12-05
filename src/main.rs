@@ -5,8 +5,8 @@ mod bf_debugger;
 
 fn main() {
     // Temporary debug
-    let program = Program::from(">+++++++++++[<+++++++++++>-]<>>++++[<++++>-]<>++++++");
-    let program2 = Program::from(">>>>>>>>>>>>>>>>>>>>>>>++++[>++++<-]>>++++++>+++++++++++[>+++++++++++<-]<>>");
+    let program = Program::from(">+++++++++++[<+++++++++++>-]<>>++++[<++++>-]<>++++++<<");
+    let program2 = Program::from(">>>>>>>>>>>>>>>>>>>>>>>>+++++++++++[<+++++++++++>-]<>>++++[<++++>-]<>++++++<<");
     
     let mut bf: BfInstance<256> = BfInstance::from(program);
     bf.run();
