@@ -1,4 +1,4 @@
-use yabf::BfInstance;
+use yabf::{BfInstance, Program};
 
 use crate::{command::Command, yabf_io::YabfIO};
 
@@ -56,7 +56,20 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
                 self.io.is_typing_code = false;
                 return BfDebugControlFlow::Run;
             }
-            Command::Run => BfDebugControlFlow::Run,
+            Command::Clear => {
+                self.io.current_code.clear();
+                return BfDebugControlFlow::Run;
+            }
+            Command::Run => {
+                if self.io.current_code.len() > 0 {
+                    let p = Program::from(self.io.current_code.clone());
+                    self.bf.program = p;
+                    self.bf.run();
+                    println!();
+                    self.bf = Default::default();
+                }
+                BfDebugControlFlow::Run
+            }
             Command::Exit => BfDebugControlFlow::Exit,
             Command::Show => {
                 println!("\n{}", self.io.current_code);

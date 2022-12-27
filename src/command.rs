@@ -3,6 +3,7 @@ use std::str::FromStr;
 pub enum Command {
     Begin, // Begin writing to current code buffer
     End,   // End writing to current code buffer
+    Clear, // Clear current code buffer
     Run,   // Run current code buffer
     Show,  // Print current code buffer
     Exit,  // Exit program
@@ -18,6 +19,7 @@ impl FromStr for Command {
             "RUN" => Ok(Self::Run),
             "EXIT" => Ok(Self::Exit),
             "SHOW" => Ok(Self::Show),
+            "CLEAR" => Ok(Self::Clear),
             _ => Err(()),
         };
     }
