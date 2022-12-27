@@ -58,6 +58,10 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
             }
             Command::Run => BfDebugControlFlow::Run,
             Command::Exit => BfDebugControlFlow::Exit,
+            Command::Show => {
+                println!("\n{}", self.io.current_code);
+                return BfDebugControlFlow::Run;
+            }
         }
     }
     pub fn dump_mem(&self, slice_len: usize) -> String {

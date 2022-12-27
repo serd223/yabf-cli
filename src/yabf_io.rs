@@ -24,8 +24,15 @@ impl YabfIO {
         let mut input_buf = String::new();
 
         let mut keep_typing = true;
+        let mut line_count = 1;
 
         while keep_typing {
+            if self.is_typing_code {
+                print!("{line_count} ");
+                use std::io::{stdout, Write};
+                stdout().flush().expect("Couldn't flush stdout.");
+                line_count += 1;
+            }
             keep_typing = self.is_typing_code;
             input_buf.clear();
             match stdin().read_line(&mut input_buf) {
@@ -37,9 +44,6 @@ impl YabfIO {
                     if let Some('\r') = input_buf.chars().next_back() {
                         input_buf.pop();
                     }
-                    if self.is_typing_code {
-                        self.current_code += &input_buf
-                    }
                 }
             }
             if let Ok(c) = Command::from_str(&input_buf) {
@@ -50,6 +54,11 @@ impl YabfIO {
                     }
                     _ => self.command_queue.push(c),
                 }
+            }
+
+            if self.is_typing_code {
+                self.current_code += &input_buf;
+                self.current_code.push('\n');
             }
         }
     }
