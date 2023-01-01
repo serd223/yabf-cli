@@ -1,4 +1,4 @@
-use yabf::{BfInstance, Program};
+use yabf::{BfInstance, Instruction, Program, ProgramStatus};
 
 use crate::{command::Command, yabf_io::YabfIO};
 
@@ -12,6 +12,14 @@ Commands:
     CLEAR: Clear the code buffer.
     SHOW: Print the code buffer.
     SET: Parse the code buffer and set it as the currently selected program.
+    DBG/DEBUG: Start debugging the current program.
+
+Debug Mode Commands:
+    N/NEXT: Step to the next instruction.
+    NO/NEXTOUT: Keep stepping until the next Out instruction and print the program output.
+    D/DMP/DUMP: Dump current program memory.
+    O/OUT: Show current program out buffer.
+    ED/ENDDEBUG: Stop debugging the current program and reset program memory.
 "#;
 
 pub enum BfDebugControlFlow {
@@ -33,6 +41,7 @@ pub struct BfDebugger<const MEMSIZE: usize> {
     pub bf: BfInstance<MEMSIZE>,
     pub cfg: BfDebugConfig,
     pub io: YabfIO,
+    debug_mode: bool,
 }
 
 impl<T: AsRef<str>, const MEMSIZE: usize> From<T> for BfDebugger<MEMSIZE> {
@@ -54,6 +63,7 @@ impl<const MEMSIZE: usize> Default for BfDebugger<MEMSIZE> {
             bf: Default::default(),
             cfg: Default::default(),
             io: Default::default(),
+            debug_mode: false,
         }
     }
 }
@@ -100,6 +110,98 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
             Command::Set => {
                 let p = Program::from(self.io.current_code.clone());
                 self.bf.program = p;
+                BfDebugControlFlow::Run
+            }
+
+            Command::Debug => {
+                self.debug_mode = true;
+                BfDebugControlFlow::Run
+            }
+            Command::Next => {
+                if self.debug_mode {
+                    match self.bf.step() {
+                        ProgramStatus::Exit => {
+                            self.debug_mode = false;
+                            println!("The Program has ended.\nProgram Output:");
+                            while let Some(c) = self.bf.io_buf.pop_out() {
+                                print!("{c}")
+                            }
+                            println!();
+                            self.bf.mem = [0; MEMSIZE];
+                            self.bf.mem_ptr = 0;
+                            self.bf.program.counter = 0;
+                        }
+                        _ => {
+                            println!(
+                                "Current Instruction: {}; Program Counter: {}",
+                                match self.bf.program.current() {
+                                    Instruction::Add => '+',
+                                    Instruction::Sub => '-',
+                                    Instruction::Left => '<',
+                                    Instruction::Right => '>',
+                                    Instruction::LoopStart(_) => '[',
+                                    Instruction::LoopEnd(_) => ']',
+                                    Instruction::Out => ',',
+                                    Instruction::In => ',',
+                                },
+                                self.bf.program.counter
+                            );
+                        }
+                    }
+                }
+                BfDebugControlFlow::Run
+            }
+            Command::NextOut => {
+                if self.debug_mode {
+                    loop {
+                        match self.bf.program.current() {
+                            Instruction::Out => break,
+                            _ => (),
+                        }
+                        match self.bf.step() {
+                            ProgramStatus::Exit => {
+                                self.debug_mode = false;
+                                println!("The Program has ended.\nProgram Output:");
+                                while let Some(c) = self.bf.io_buf.pop_out() {
+                                    print!("{c}")
+                                }
+                                println!();
+                                self.bf.mem = [0; MEMSIZE];
+                                self.bf.mem_ptr = 0;
+                                self.bf.program.counter = 0;
+                                break;
+                            }
+                            _ => (),
+                        }
+                    }
+                    self.io.command_queue.push(Command::Out);
+                    self.io.command_queue.push(Command::Next);
+                    self.step_command();
+                    self.step_command();
+                }
+                BfDebugControlFlow::Run
+            }
+            Command::Dump => {
+                if self.debug_mode {
+                    println!("{}", self.dump_mem(7));
+                }
+                BfDebugControlFlow::Run
+            }
+            Command::Out => {
+                if self.debug_mode {
+                    let mut o = self.bf.io_buf.out_buf.clone();
+                    while let Some(c) = o.pop() {
+                        print!("{c}")
+                    }
+                    println!();
+                }
+                BfDebugControlFlow::Run
+            }
+            Command::EndDebug => {
+                self.debug_mode = false;
+                self.bf.mem = [0; MEMSIZE];
+                self.bf.mem_ptr = 0;
+                self.bf.program.counter = 0;
                 BfDebugControlFlow::Run
             }
         }
