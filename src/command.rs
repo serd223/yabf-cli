@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 pub enum Command {
+    Help,  // Print help text
     Begin, // Begin writing to current code buffer
     End,   // End writing to current code buffer
     Clear, // Clear current code buffer
@@ -15,6 +16,7 @@ impl FromStr for Command {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         return match s.to_uppercase().as_str() {
+            "HELP" => Ok(Self::Help),
             "BEGIN" => Ok(Self::Begin),
             "END" => Ok(Self::End),
             "RUN" => Ok(Self::Run),

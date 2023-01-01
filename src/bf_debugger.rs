@@ -2,6 +2,18 @@ use yabf::{BfInstance, Program};
 
 use crate::{command::Command, yabf_io::YabfIO};
 
+const HELP_TEXT: &str = r#"
+Commands:
+    HELP: Show this text.
+    EXIT: Exit yabf-cli.
+    RUN: Run the currently selected program.
+    BEGIN: Start writing code to the code buffer.
+    END: Stop writing code to the code buffer.
+    CLEAR: Clear the code buffer.
+    SHOW: Print the code buffer.
+    SET: Parse the code buffer and set it as the currently selected program.
+"#;
+
 pub enum BfDebugControlFlow {
     Exit,
     Run,
@@ -52,6 +64,10 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
             return BfDebugControlFlow::Run;
         }
         match self.io.command_queue.pop().unwrap() {
+            Command::Help => {
+                println!("{}", HELP_TEXT);
+                BfDebugControlFlow::Run
+            }
             Command::Begin => {
                 self.io.is_typing_code = true;
                 BfDebugControlFlow::Run
