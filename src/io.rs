@@ -4,7 +4,6 @@ pub struct IO {
     pub current_code: String,
     pub command_queue: Vec<Command>,
     pub is_typing_code: bool,
-    pub command_history: Vec<Command>,
 }
 
 impl Default for IO {
@@ -13,7 +12,6 @@ impl Default for IO {
             current_code: String::new(),
             command_queue: vec![],
             is_typing_code: false,
-            command_history: vec![],
         }
     }
 }
