@@ -1,13 +1,13 @@
 use super::command::Command;
 use std::str::FromStr;
-pub struct YabfIO {
+pub struct IO {
     pub current_code: String,
     pub command_queue: Vec<Command>,
     pub is_typing_code: bool,
     pub command_history: Vec<Command>,
 }
 
-impl Default for YabfIO {
+impl Default for IO {
     fn default() -> Self {
         Self {
             current_code: String::new(),
@@ -18,7 +18,7 @@ impl Default for YabfIO {
     }
 }
 
-impl YabfIO {
+impl IO {
     pub fn try_read_command(&mut self) {
         use std::io::stdin;
         let mut input_buf = String::new();

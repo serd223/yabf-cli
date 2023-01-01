@@ -1,6 +1,6 @@
 use yabf::{BfInstance, Instruction, Program, ProgramStatus};
 
-use crate::{command::Command, yabf_io::YabfIO};
+use crate::{command::Command, io::IO};
 
 const HELP_TEXT: &str = r#"
 Commands:
@@ -22,7 +22,7 @@ Debug Mode Commands:
     ED/ENDDEBUG: Stop debugging the current program and reset program memory.
 "#;
 
-pub enum BfDebugControlFlow {
+pub enum ControlFlow {
     Exit,
     Run,
 }
@@ -37,14 +37,14 @@ impl Default for BfDebugConfig {
     }
 }
 
-pub struct BfDebugger<const MEMSIZE: usize> {
+pub struct Context<const MEMSIZE: usize> {
     pub bf: BfInstance<MEMSIZE>,
     pub cfg: BfDebugConfig,
-    pub io: YabfIO,
+    pub io: IO,
     debug_mode: bool,
 }
 
-impl<T: AsRef<str>, const MEMSIZE: usize> From<T> for BfDebugger<MEMSIZE> {
+impl<T: AsRef<str>, const MEMSIZE: usize> From<T> for Context<MEMSIZE> {
     fn from(s: T) -> Self {
         let c = s.as_ref();
         let mut res = Self::default();
@@ -57,7 +57,7 @@ impl<T: AsRef<str>, const MEMSIZE: usize> From<T> for BfDebugger<MEMSIZE> {
     }
 }
 
-impl<const MEMSIZE: usize> Default for BfDebugger<MEMSIZE> {
+impl<const MEMSIZE: usize> Default for Context<MEMSIZE> {
     fn default() -> Self {
         Self {
             bf: Default::default(),
@@ -68,27 +68,27 @@ impl<const MEMSIZE: usize> Default for BfDebugger<MEMSIZE> {
     }
 }
 
-impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
-    pub fn step_command(&mut self) -> BfDebugControlFlow {
+impl<const MEMSIZE: usize> Context<MEMSIZE> {
+    pub fn step_command(&mut self) -> ControlFlow {
         if self.io.command_queue.len() < 1 {
-            return BfDebugControlFlow::Run;
+            return ControlFlow::Run;
         }
         match self.io.command_queue.pop().unwrap() {
             Command::Help => {
                 println!("{}", HELP_TEXT);
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Begin => {
                 self.io.is_typing_code = true;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::End => {
                 self.io.is_typing_code = false;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Clear => {
                 self.io.current_code.clear();
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Run => {
                 self.bf.run();
@@ -96,26 +96,26 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
                 self.bf.mem = [0; MEMSIZE];
                 self.bf.mem_ptr = 0;
                 self.bf.program.counter = 0;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
-            Command::Exit => BfDebugControlFlow::Exit,
+            Command::Exit => ControlFlow::Exit,
             Command::Show => {
                 println!();
                 for (i, l) in self.io.current_code.lines().enumerate() {
                     println!("{} {l}", i + 1);
                 }
                 println!();
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Set => {
                 let p = Program::from(self.io.current_code.clone());
                 self.bf.program = p;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
 
             Command::Debug => {
                 self.debug_mode = true;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Next => {
                 if self.debug_mode {
@@ -149,7 +149,7 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
                         }
                     }
                 }
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::NextOut => {
                 if self.debug_mode {
@@ -179,13 +179,13 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
                     self.step_command();
                     self.step_command();
                 }
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Dump => {
                 if self.debug_mode {
                     println!("{}", self.dump_mem(7));
                 }
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::Out => {
                 if self.debug_mode {
@@ -195,14 +195,14 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
                     }
                     println!();
                 }
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
             Command::EndDebug => {
                 self.debug_mode = false;
                 self.bf.mem = [0; MEMSIZE];
                 self.bf.mem_ptr = 0;
                 self.bf.program.counter = 0;
-                BfDebugControlFlow::Run
+                ControlFlow::Run
             }
         }
     }

@@ -1,16 +1,16 @@
-use bf_debugger::*;
+use context::*;
 
-mod bf_debugger;
 mod command;
-mod yabf_io;
+mod context;
+mod io;
 
 fn main() {
-    let mut bf_dbg: BfDebugger<256> = BfDebugger::from(">+++++++++[<++++>-]<.");
+    let mut bf_dbg: Context<256> = Context::from(">+++++++++[<++++>-]<.");
     bf_dbg.prompt();
     loop {
         let r = bf_dbg.step_command();
         match r {
-            BfDebugControlFlow::Exit => break,
+            ControlFlow::Exit => break,
             _ => (),
         }
         bf_dbg.prompt();
