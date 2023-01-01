@@ -25,7 +25,12 @@ impl YabfIO {
 
         let mut keep_typing = true;
         let mut line_count = 1;
-
+        if self.is_typing_code {
+            for l in self.current_code.lines() {
+                println!("{line_count} {l}");
+                line_count += 1;
+            }
+        }
         while keep_typing {
             if self.is_typing_code {
                 print!("{line_count} ");

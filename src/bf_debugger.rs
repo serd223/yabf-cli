@@ -23,12 +23,16 @@ pub struct BfDebugger<const MEMSIZE: usize> {
     pub io: YabfIO,
 }
 
-impl<const MEMSIZE: usize> From<BfInstance<MEMSIZE>> for BfDebugger<MEMSIZE> {
-    fn from(bf: BfInstance<MEMSIZE>) -> Self {
-        Self {
-            bf: bf,
-            ..Default::default()
-        }
+impl<T: AsRef<str>, const MEMSIZE: usize> From<T> for BfDebugger<MEMSIZE> {
+    fn from(s: T) -> Self {
+        let c = s.as_ref();
+        let mut res = Self::default();
+        res.io.current_code = c.to_string();
+        res.io.current_code.push('\n');
+        let p = Program::from(s);
+        res.bf.program = p;
+
+        res
     }
 }
 
@@ -50,30 +54,37 @@ impl<const MEMSIZE: usize> BfDebugger<MEMSIZE> {
         match self.io.command_queue.pop().unwrap() {
             Command::Begin => {
                 self.io.is_typing_code = true;
-                return BfDebugControlFlow::Run;
+                BfDebugControlFlow::Run
             }
             Command::End => {
                 self.io.is_typing_code = false;
-                return BfDebugControlFlow::Run;
+                BfDebugControlFlow::Run
             }
             Command::Clear => {
                 self.io.current_code.clear();
-                return BfDebugControlFlow::Run;
+                BfDebugControlFlow::Run
             }
             Command::Run => {
-                if self.io.current_code.len() > 0 {
-                    let p = Program::from(self.io.current_code.clone());
-                    self.bf.program = p;
-                    self.bf.run();
-                    println!();
-                    self.bf = Default::default();
-                }
+                self.bf.run();
+                println!();
+                self.bf.mem = [0; MEMSIZE];
+                self.bf.mem_ptr = 0;
+                self.bf.program.counter = 0;
                 BfDebugControlFlow::Run
             }
             Command::Exit => BfDebugControlFlow::Exit,
             Command::Show => {
-                println!("\n{}", self.io.current_code);
-                return BfDebugControlFlow::Run;
+                println!();
+                for (i, l) in self.io.current_code.lines().enumerate() {
+                    println!("{} {l}", i + 1);
+                }
+                println!();
+                BfDebugControlFlow::Run
+            }
+            Command::Set => {
+                let p = Program::from(self.io.current_code.clone());
+                self.bf.program = p;
+                BfDebugControlFlow::Run
             }
         }
     }

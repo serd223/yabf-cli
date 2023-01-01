@@ -6,6 +6,7 @@ pub enum Command {
     Clear, // Clear current code buffer
     Run,   // Run current code buffer
     Show,  // Print current code buffer
+    Set,   // Set current code buffer to be the current program
     Exit,  // Exit program
 }
 
@@ -20,6 +21,7 @@ impl FromStr for Command {
             "EXIT" => Ok(Self::Exit),
             "SHOW" => Ok(Self::Show),
             "CLEAR" => Ok(Self::Clear),
+            "SET" => Ok(Self::Set),
             _ => Err(()),
         };
     }
