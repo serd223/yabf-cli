@@ -4,8 +4,12 @@ mod command;
 mod context;
 mod io;
 
+const DEFAULT_PROGRAM: &str = r#"
+>>++++++[-<++++>]<+[-<+++>]<------.  
+"#;
+
 fn main() {
-    let mut bf_dbg: Context<256> = Context::from(">+++++++++[<++++>-]<.");
+    let mut bf_dbg: Context<256> = Context::from(DEFAULT_PROGRAM);
     bf_dbg.prompt();
     loop {
         let r = bf_dbg.step_command();
