@@ -2,7 +2,7 @@ use yabf::{BfInstance, Instruction, Program, ProgramStatus};
 
 use crate::{command::Command, io::IO};
 
-const HELP_TEXT: &str = r#"
+pub const HELP_TEXT: &str = r#"
 Commands:
     HELP: Show this text.
     EXIT: Exit yabf-cli.
@@ -17,7 +17,7 @@ Commands:
 Debug Mode Commands:
     N/NEXT: Step to the next instruction.
     NO/NEXTOUT: Keep stepping until the next Out instruction and print the program output.
-    D/DMP/DUMP: Dump current program memory.
+    D/DMP/DUMP: Visualize the current program memory.
     O/OUT: Show current program out buffer.
     ED/ENDDEBUG: Stop debugging the current program and reset program memory.
 "#;
